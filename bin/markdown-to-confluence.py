@@ -22,9 +22,9 @@ session = requests.Session()
 session.auth = (username, password)
 
 
-def find_page(base, space, page_title):
+def find_page(url, space, page_title):
     querystring = f"cql=title='{page_title}' and space='{space}'"
-    search_url = f"{base}/rest/api/content/search?{querystring}"
+    search_url = f"{url}/rest/api/content/search?{querystring}"
     resp = session.get(search_url)
     resp.raise_for_status()
     if len(resp.json()['results']) > 0:
@@ -33,14 +33,14 @@ def find_page(base, space, page_title):
         return None
 
 
-def get_page_info(base, page_id):
-    url = f"{base}/rest/api/content/{page_id}?expand=ancestors,version"
+def get_page_info(url, page_id):
+    url = f"{url}/rest/api/content/{page_id}?expand=ancestors,version"
     resp = session.get(url)
     resp.raise_for_status()
     return resp.json()
 
 
-def create_page(base, space, page_title, ancestor=None):
+def create_page(url, space, page_title, ancestor=None):
     data = {
         "type": "page",
         "title": page_title,
@@ -53,7 +53,7 @@ def create_page(base, space, page_title, ancestor=None):
     if ancestor:
         data['ancestors'] = [{"id": ancestor}]
 
-    url = f"{base}/rest/api/content/"
+    url = f"{url}/rest/api/content/"
     resp = session.post(url, json=data)
 
     if not resp.ok:
@@ -64,9 +64,9 @@ def create_page(base, space, page_title, ancestor=None):
     return resp.json()
 
 
-def update_page(base, page_id, markup, comment):
-    url = f"{base}/rest/api/content/{page_id}"
-    info = get_page_info(base, page_id)
+def update_page(url, page_id, markup, comment):
+    info = get_page_info(url, page_id)
+    url = f"{url}/rest/api/content/{page_id}"
     updated_page_version = int(info["version"]["number"] + 1)
 
     data = {
@@ -90,12 +90,20 @@ def update_page(base, page_id, markup, comment):
 def getargs():
     """ Parse args from the command-line.  """
     parser = argparse.ArgumentParser(description='Publish docs')
-    parser.add_argument(
-        '--confluence-url', help='URL to publish to confluence.',
-    )
-    parser.add_argument('--docs', help='Path to location of the doc sources.')
+    parser.add_argument('--confluence-url', help='URL to publish to confluence.')
     parser.add_argument('--confluence-space', help='Space to publish to confluence.')
-    return parser.parse_args()
+    parser.add_argument('--docs', help='Path to location of the doc sources.')
+    args = parser.parse_args()
+    if not args.confluence_url:
+        print("--confluence-url is required.")
+        sys.exit(1)
+    if not args.confluence_space:
+        print("--confluence-space is required.")
+        sys.exit(1)
+    if not args.docs:
+        print("--docs is required.")
+        sys.exit(1)
+    return args
 
 
 def publish(args):
@@ -105,17 +113,25 @@ def publish(args):
     pages_by_name = {}
 
     def get_or_create_page(pagename, namespace):
+        print(f"get_or_create({pagename}, {namespace})", file=sys.stderr)
         if not pagename:
             return
         page = pages_by_name.get(pagename)
         if not page:
             print("Searching for %s" % pagename, file=sys.stderr)
-            page = find_page(space=args.confluence_space, page_title=pagename)
+            page = find_page(
+                url=args.confluence_url,
+                space=args.confluence_space,
+                page_title=pagename,
+            )
         if not page:
             print("Creating %s" % pagename, file=sys.stderr)
             ancestor = pages_by_name[namespace]['id'] if namespace else None
             page = create_page(
-                space=args.confluence_space, page_title=pagename, ancestor=ancestor,
+                url=args.confluence_url,
+                space=args.confluence_space,
+                page_title=pagename,
+                ancestor=ancestor,
             )
         pages_by_name[pagename] = page
         return page
@@ -133,7 +149,7 @@ def publish(args):
             pagename = pagename.title()
 
             page = get_or_create_page(pagename, namespace)
-            page = get_page_info(page['id'])
+            page = get_page_info(args.confluence_url, page['id'])
 
             with open(f'{base}/{filename}', 'r') as f:
                 markdown = f.read()
@@ -142,7 +158,7 @@ def publish(args):
             )
 
             # Check for unnecessary update first
-            url = args.confluence_url + page['_links']['webui']
+            url = args.confluence_url + '/' + page['_links']['webui']
             digest = hashlib.sha256(markup.encode('utf-8')).hexdigest()
             if digest == page['version']['message']:
                 print("Skipping %s - no update needed." % url, file=sys.stderr)
@@ -150,7 +166,7 @@ def publish(args):
 
             # Otherwise, update our page with the output
             print("Updating %s" % url, file=sys.stderr)
-            update_page(page['id'], markup, digest)
+            update_page(args.confluence_url, page['id'], markup, digest)
             print("Updated %s" % url, file=sys.stderr)
 
 
