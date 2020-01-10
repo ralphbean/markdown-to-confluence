@@ -156,7 +156,7 @@ def publish(args):
             # Add a header prefix if we can figure out where to link people to.
             # CI_PROJECT_URL is a gitlab-ci environment variable.
             if 'CI_PROJECT_URL' in os.environ:
-                folder = base.lsplit(root, 1)[1]
+                folder = base.split(root, 1)[1]
                 header = (
                     f" > Do not bother editing this page directly – it is automatically "
                     f"generated from [source]({os.environ['CI_PROJECT_URL']}/blob/master/"
