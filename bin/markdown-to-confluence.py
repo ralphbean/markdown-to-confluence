@@ -152,8 +152,19 @@ def publish(args):
 
             with open(f'{base}/{filename}', 'r') as f:
                 markdown = f.read()
+
+            # Add a header prefix if we can figure out where to link people to.
+            # CI_PROJECT_URL is a gitlab-ci environment variable.
+            if 'CI_PROJECT_URL' in os.environ:
+                header = (
+                    f" > Do not bother editing this page directly – it is automatically "
+                    f"generated from [source]({os.environ['CI_PROJECT_URL']}/blob/master/"
+                    f"{base}/{filename}).  Submit a merge request, instead.\n\n"
+                )
+                markdown = header + markdown
+
             markup = pypandoc.convert_text(
-                markdown, f'{BIN}/confluence.lua', 'markdown_mmd'
+                markdown, f'{BIN}/confluence.lua', 'markdown_github'
             )
 
             # Check for unnecessary update first
