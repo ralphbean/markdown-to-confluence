@@ -9,8 +9,6 @@ import sys
 import pypandoc
 import requests
 
-from requests.auth import HTTPBasicAuth
-
 BIN = os.path.dirname(__file__)
 
 username = os.environ.get('CONFLUENCE_USERNAME')
@@ -20,8 +18,8 @@ if not username:
 if not password:
     raise KeyError("CONFLUENCE_PASSWORD must be defined to publish.")
 
-auth = {'auth': HTTPBasicAuth(username, password)}
-session = requests.Session(**auth)
+session = requests.Session()
+session.auth = (username, password)
 
 
 def find_page(base, space, page_title):
