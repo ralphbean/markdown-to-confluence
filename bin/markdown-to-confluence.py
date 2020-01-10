@@ -11,6 +11,7 @@ import requests
 
 from requests.auth import HTTPBasicAuth
 
+BIN = os.path.dirname(__file__)
 
 username = os.environ.get('CONFLUENCE_USERNAME')
 password = os.environ.get('CONFLUENCE_PASSWORD')
@@ -139,7 +140,7 @@ def publish(args):
             with open(f'{base}/{filename}', 'r') as f:
                 markdown = f.read()
             markup = pypandoc.convert_text(
-                markdown, 'bin/confluence.lua', 'markdown_mmd'
+                markdown, f'{BIN}/confluence.lua', 'markdown_mmd'
             )
 
             # Check for unnecessary update first
