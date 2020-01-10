@@ -113,7 +113,6 @@ def publish(args):
     pages_by_name = {}
 
     def get_or_create_page(pagename, namespace):
-        print(f"get_or_create({pagename}, {namespace})", file=sys.stderr)
         if not pagename:
             return
         page = pages_by_name.get(pagename)
