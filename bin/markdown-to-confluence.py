@@ -92,7 +92,8 @@ def getargs():
     parser = argparse.ArgumentParser(description='Publish docs')
     parser.add_argument('--confluence-url', help='URL to publish to confluence.')
     parser.add_argument('--confluence-space', help='Space to publish to confluence.')
-    parser.add_argument('--docs', help='Path to location of the doc sources.')
+    parser.add_argument('--path', help='Relative path to location of the docs, inside root.')
+    parser.add_argument('--root', help='Absolute path to the docs repo.')
     args = parser.parse_args()
     if not args.confluence_url:
         print("--confluence-url is required.")
@@ -100,15 +101,19 @@ def getargs():
     if not args.confluence_space:
         print("--confluence-space is required.")
         sys.exit(1)
-    if not args.docs:
-        print("--docs is required.")
+    if not args.root:
+        print("--root is required.")
         sys.exit(1)
+    args.root = os.path.abspath(args.root)
+    if not args.path:
+        print("--path is required.")
+        sys.exit(1)
+    args.path = args.path.strip('/')
     return args
 
 
 def publish(args):
-
-    root = args.docs.rstrip('/') + '/'
+    root = f"{args.root}/{args.path}"
 
     pages_by_name = {}
 
@@ -156,11 +161,12 @@ def publish(args):
             # Add a header prefix if we can figure out where to link people to.
             # CI_PROJECT_URL is a gitlab-ci environment variable.
             if 'CI_PROJECT_URL' in os.environ:
-                folder = base.split(root, 1)[1]
+                gitlab = os.environ['CI_PROJECT_URL'].strip('/')
+                folder = base.split(args.root, 1)[1].strip('/')
                 header = (
                     f" > Do not bother editing this page directly – it is automatically "
-                    f"generated from [source]({os.environ['CI_PROJECT_URL']}/blob/master/"
-                    f"{folder}/{filename}).  Submit a merge request, instead.\n\n"
+                    f"generated from [source]({gitlab}/blob/master/"
+                    f"{folder}/{filename}).  Submit a merge request, instead!\n"
                 )
                 markdown = header + markdown
 
