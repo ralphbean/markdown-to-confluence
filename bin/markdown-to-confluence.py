@@ -142,7 +142,7 @@ def publish(args):
 
     print(f"Looking for docs in {root}", file=sys.stderr)
     for base, directories, filenames in os.walk(root):
-        namespace = base[len(root) :].split('/')[-1].title()
+        namespace = base[len(root) :].split('/')[-1]
 
         get_or_create_page(namespace, None)
 
@@ -150,7 +150,6 @@ def publish(args):
             pagename, extension = filename.rsplit('.', 1)
             if extension != 'md':
                 raise ValueError(f"Only markdown is supported, not {filename}")
-            pagename = pagename.title()
 
             page = get_or_create_page(pagename, namespace)
             page = get_page_info(args.confluence_url, page['id'])
