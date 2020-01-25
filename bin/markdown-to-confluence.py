@@ -92,7 +92,9 @@ def getargs():
     parser = argparse.ArgumentParser(description='Publish docs')
     parser.add_argument('--confluence-url', help='URL to publish to confluence.')
     parser.add_argument('--confluence-space', help='Space to publish to confluence.')
-    parser.add_argument('--path', help='Relative path to location of the docs, inside root.')
+    parser.add_argument(
+        '--path', help='Relative path to location of the docs, inside root.'
+    )
     parser.add_argument('--root', help='Absolute path to the docs repo.')
     args = parser.parse_args()
     if not args.confluence_url:
