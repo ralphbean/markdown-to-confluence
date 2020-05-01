@@ -171,9 +171,7 @@ def publish(args):
                 )
                 markdown = header + markdown
 
-            markup = pypandoc.convert_text(
-                markdown, f'{BIN}/confluence.lua', 'markdown_github'
-            )
+            markup = pypandoc.convert_text(markdown, f'{BIN}/confluence.lua', 'gfm')
 
             # Check for unnecessary update first
             url = args.confluence_url + '/' + page['_links']['webui']
