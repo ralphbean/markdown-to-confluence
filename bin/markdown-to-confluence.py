@@ -183,7 +183,7 @@ def publish(args):
             if args.dry_run:
                 print("!! Would have updated %s, but --dry-run" % full_path, file=sys.stderr)
                 print('----', file=sys.stderr)
-                print(markup)
+                print(markup, file=sys.stderr)
                 print('----', file=sys.stderr)
             else:
                 page = get_or_create_page(pagename, namespace)
