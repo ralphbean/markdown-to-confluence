@@ -13,10 +13,6 @@ BIN = os.path.dirname(__file__)
 
 username = os.environ.get('CONFLUENCE_USERNAME')
 password = os.environ.get('CONFLUENCE_PASSWORD')
-if not username:
-    raise KeyError("CONFLUENCE_USERNAME must be defined to publish.")
-if not password:
-    raise KeyError("CONFLUENCE_PASSWORD must be defined to publish.")
 
 session = requests.Session()
 session.auth = (username, password)
@@ -92,25 +88,37 @@ def getargs():
     parser = argparse.ArgumentParser(description='Publish docs')
     parser.add_argument('--confluence-url', help='URL to publish to confluence.')
     parser.add_argument('--confluence-space', help='Space to publish to confluence.')
+    parser.add_argument('--dry-run', action='store_true', help='Don\'t actually update confluence.')
     parser.add_argument(
         '--path', help='Relative path to location of the docs, inside root.'
     )
     parser.add_argument('--root', help='Absolute path to the docs repo.')
     args = parser.parse_args()
-    if not args.confluence_url:
-        print("--confluence-url is required.")
-        sys.exit(1)
-    if not args.confluence_space:
-        print("--confluence-space is required.")
-        sys.exit(1)
+
+    if not args.dry_run:
+        if not args.confluence_url:
+            print("--confluence-url is required.")
+            sys.exit(1)
+        if not args.confluence_space:
+            print("--confluence-space is required.")
+            sys.exit(1)
+        if not username:
+            print("CONFLUENCE_USERNAME must be defined to publish.")
+            sys.exit(1)
+        if not password:
+            print("CONFLUENCE_PASSWORD must be defined to publish.")
+            sys.exit(1)
+
     if not args.root:
         print("--root is required.")
         sys.exit(1)
     args.root = os.path.abspath(args.root)
+
     if not args.path:
         print("--path is required.")
         sys.exit(1)
     args.path = args.path.strip('/')
+
     return args
 
 
@@ -146,17 +154,16 @@ def publish(args):
     for base, directories, filenames in os.walk(root):
         namespace = base[len(root) :].split('/')[-1]
 
-        get_or_create_page(namespace, None)
+        if not args.dry_run:
+            get_or_create_page(namespace, None)
 
         for filename in filenames:
             pagename, extension = filename.rsplit('.', 1)
             if extension != 'md':
                 raise ValueError(f"Only markdown is supported, not {filename}")
 
-            page = get_or_create_page(pagename, namespace)
-            page = get_page_info(args.confluence_url, page['id'])
-
-            with open(f'{base}/{filename}', 'r') as f:
+            full_path = f'{base}/{filename}'
+            with open(full_path, 'r') as f:
                 markdown = f.read()
 
             # Add a header prefix if we can figure out where to link people to.
@@ -173,17 +180,26 @@ def publish(args):
 
             markup = pypandoc.convert_text(markdown, f'{BIN}/confluence.lua', 'gfm')
 
-            # Check for unnecessary update first
-            url = args.confluence_url + '/' + page['_links']['webui']
-            digest = hashlib.sha256(markup.encode('utf-8')).hexdigest()
-            if digest == page['version']['message']:
-                print("Skipping %s - no update needed." % url, file=sys.stderr)
-                continue
+            if args.dry_run:
+                print("!! Would have updated %s, but --dry-run" % full_path, file=sys.stderr)
+                print('----', file=sys.stderr)
+                print(markup)
+                print('----', file=sys.stderr)
+            else:
+                page = get_or_create_page(pagename, namespace)
+                page = get_page_info(args.confluence_url, page['id'])
 
-            # Otherwise, update our page with the output
-            print("Updating %s" % url, file=sys.stderr)
-            update_page(args.confluence_url, page['id'], markup, digest)
-            print("Updated %s" % url, file=sys.stderr)
+                # Check for unnecessary update first
+                url = args.confluence_url + '/' + page['_links']['webui']
+                digest = hashlib.sha256(markup.encode('utf-8')).hexdigest()
+                if digest == page['version']['message']:
+                    print("Skipping %s - no update needed." % url, file=sys.stderr)
+                    continue
+
+                # Otherwise, update our page with the output
+                print("Updating %s" % url, file=sys.stderr)
+                update_page(args.confluence_url, page['id'], markup, digest)
+                print("Updated %s" % url, file=sys.stderr)
 
 
 if __name__ == '__main__':
