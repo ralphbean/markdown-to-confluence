@@ -14,6 +14,9 @@ BIN = os.path.dirname(__file__)
 username = os.environ.get('CONFLUENCE_USERNAME')
 password = os.environ.get('CONFLUENCE_PASSWORD')
 
+# all pages will get their name prefix with this string (useful for generating previews)
+prefix = os.environ.get('CONFLUENCE_PREFIX', '')
+
 session = requests.Session()
 session.auth = (username, password)
 
@@ -152,13 +155,15 @@ def publish(args):
 
     print(f"Looking for docs in {root}", file=sys.stderr)
     for base, directories, filenames in os.walk(root):
-        namespace = base[len(root) :].split('/')[-1]
+        namespace = prefix + base[len(root) :].split('/')[-1]
 
         if not args.dry_run:
             get_or_create_page(namespace, None)
 
         for filename in filenames:
             pagename, extension = filename.rsplit('.', 1)
+            pagename = prefix + pagename
+
             if extension != 'md':
                 raise ValueError(f"Only markdown is supported, not {filename}")
 
@@ -182,6 +187,7 @@ def publish(args):
 
             if args.dry_run:
                 print("!! Would have updated %s, but --dry-run" % full_path, file=sys.stderr)
+                print("!! I would have updated %s/%s " % (namespace, pagename), file=sys.stderr)
                 print('----', file=sys.stderr)
                 print(markup, file=sys.stderr)
                 print('----', file=sys.stderr)
