@@ -11,6 +11,9 @@ import requests
 
 BIN = os.path.dirname(__file__)
 
+MDIMG_PATTERN = re.compile('\\!\\[(.+)\\]\\((.+)\\)')
+
+
 username = os.environ.get('CONFLUENCE_USERNAME')
 password = os.environ.get('CONFLUENCE_PASSWORD')
 
@@ -31,6 +34,20 @@ def find_page(url, space, page_title):
     else:
         return None
 
+
+def find_page_attachments(page_id):
+    url = f"{url}/rest/api/content/{page_id}/child/attachment"
+    resp = session.get(url)
+    resp.raise_for_status()
+    if len(resp.json()['results']) > 0:
+        attachments = {}
+        for result in resp.json()['results']:
+            attachments[result['title']] = result
+
+        return attachments
+    else:
+        return None
+    
 
 def get_page_info(url, page_id):
     url = f"{url}/rest/api/content/{page_id}?expand=ancestors,version"
@@ -84,6 +101,45 @@ def update_page(url, page_id, markup, comment):
         print("Confluence response: \n", resp.json())
     resp.raise_for_status()
     return resp.json()
+
+def replace_markdown_image_refs(markdown):
+    attachment_map = {}
+
+    def img_replace(matchobj):
+        text = matchobj.group(1)
+        path = matchobj.group(2)
+
+        basename = os.path.basename(path)
+        attachment_map[basename] = path
+
+        return f"<ac:link><ri:attachment ri:filename={basename}/><ac:plain-text-link-body>{text}</ac:plain-text-link-body></ac:link>"
+
+    return (re.sub(MDIMG_PATTERN, img_replace, markdown), attachment_map)
+
+def upload_attached_images(attachment_map, base, page_id):
+    attachments = find_page_attachments(page_id)
+
+    for (basename, path) in attachment_map:
+        fpath = os.path.join(base, path)
+
+        with open(fpath, 'rb') as f:
+            img_data = f.read()
+
+        digest = hashlib.sha256(img_data).hexdigest()
+        att_info = attachments.get(basename)
+        if att_info and att_info['metadata'] and digest == att_info['metadata'].get('comment'):
+            print("Skipping attachment %s - no update needed." % fpath, file=sys.stderr)
+        else:
+            url = f"{url}/rest/api/content/{page_id}/child/attachment"
+            files={
+                'file': img_data,
+                minorEdit: True,
+                'comment': digest
+            }
+
+            resp = session.put(url, files=files)
+            resp.raise_for_status()
+
 
 
 def getargs():
@@ -183,6 +239,13 @@ def publish(args):
                 )
                 markdown = header + markdown
 
+                # find ![Text](link.png) image refs, and replace with <ac:link><ri:attachment ...>
+                # See https://confluence.atlassian.com/conf67/confluence-storage-format-945102888.html
+                # output is the modified markdown, and a mapping of file basename to relative path on disk.
+                (markdown, attachment_map) = replace_markdown_image_refs(markdown)
+            else:
+                attachment_map = [] # be resilient to misconfiguration
+
             markup = pypandoc.convert_text(markdown, f'{BIN}/confluence.lua', 'gfm')
 
             if args.dry_run:
@@ -194,6 +257,9 @@ def publish(args):
             else:
                 page = get_or_create_page(pagename, namespace)
                 page = get_page_info(args.confluence_url, page['id'])
+
+                # Take attachments found above, and upload as attachments to the page
+                upload_image_attachments(attachment_map, base, page['id'])
 
                 # Check for unnecessary update first
                 url = args.confluence_url + '/' + page['_links']['webui']
