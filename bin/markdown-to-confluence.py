@@ -169,8 +169,9 @@ def getargs():
             sys.exit(1)
 
     if not args.root:
-        print("--root is required.")
-        sys.exit(1)
+        args.root = os.getcwd()
+        # print("--root is required.")
+        # sys.exit(1)
     args.root = os.path.abspath(args.root)
 
     if not args.path:
