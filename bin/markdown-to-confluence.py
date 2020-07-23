@@ -7,6 +7,7 @@ import os
 import sys
 import re
 from urllib.parse import quote
+import re
 
 import pypandoc
 import requests
