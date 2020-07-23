@@ -5,6 +5,7 @@ import hashlib
 import logging
 import os
 import sys
+import re
 
 import pypandoc
 import requests
