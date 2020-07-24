@@ -120,7 +120,7 @@ def replace_markdown_image_refs(markdown):
     return (re.sub(MDIMG_PATTERN, img_replace, markdown), attachment_map)
 
 def upload_attached_images(url, attachment_map, base_fs_path, page_id):
-    attachments = find_page_attachments(page_id)
+    attachments = find_page_attachments(url, page_id)
 
     for (basename, path) in attachment_map:
         fpath = os.path.join(base_fs_path, path)
