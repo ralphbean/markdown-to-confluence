@@ -223,7 +223,8 @@ def publish(args):
             pagename = prefix + pagename
 
             if extension != 'md':
-                raise ValueError(f"Only markdown is supported, not {filename}")
+                print(f"Only markdown is supported for conversion. Skipping: '{filename}'")
+                continue
 
             full_path = f'{base}/{filename}'
             with open(full_path, 'r') as f:
