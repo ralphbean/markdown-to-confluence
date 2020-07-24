@@ -149,7 +149,9 @@ def getargs():
     parser = argparse.ArgumentParser(description='Publish docs')
     parser.add_argument('--confluence-url', help='URL to publish to confluence.')
     parser.add_argument('--confluence-space', help='Space to publish to confluence.')
-    parser.add_argument('--dry-run', action='store_true', help='Don\'t actually update confluence.')
+    parser.add_argument(
+        '--dry-run', action='store_true', help='Don\'t actually update confluence.'
+    )
     parser.add_argument(
         '--path', help='Relative path to location of the docs, inside root.'
     )
@@ -253,8 +255,14 @@ def publish(args):
             markup = pypandoc.convert_text(markdown, f'{BIN}/confluence.lua', 'gfm')
 
             if args.dry_run:
-                print("!! Would have updated %s, but --dry-run" % full_path, file=sys.stderr)
-                print("!! I would have updated %s/%s " % (namespace, pagename), file=sys.stderr)
+                print(
+                    "!! Would have updated %s, but --dry-run" % full_path,
+                    file=sys.stderr,
+                )
+                print(
+                    "!! I would have updated %s/%s " % (namespace, pagename),
+                    file=sys.stderr,
+                )
                 print('----', file=sys.stderr)
                 print(markup, file=sys.stderr)
                 print('----', file=sys.stderr)
