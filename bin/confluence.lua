@@ -156,6 +156,8 @@ function Link(s, src, tit, attr)
   elseif src and string.sub(src, 1, 1) == "#" then
     -- [Anchor Link](#anchor), taken from https://confluence.atlassian.com/doc/confluence-storage-format-790796544.html#ConfluenceStorageFormat-Links
     return LinkToAnchor(escape(string.sub(src, 2, -1), true), s)
+  elseif src and string.sub(src, 1, 22) == "confluence-attachment:" then
+   return string.format('<ac:image ac:thumbnail="true" ac:title="%s" ac:alt="%s"><ri:attachment ri:filename="%s"/></ac:image>', s, s, string.sub(src,23))
   else
     return "<a href='" .. escape(src,true) .. "' title='" ..
            escape(tit,true) .. "'>" .. s .. "</a>"

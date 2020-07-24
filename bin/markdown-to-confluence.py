@@ -47,6 +47,7 @@ def find_page_attachments(url, page_id):
         for result in resp.json()['results']:
             attachments[result['title']] = result
 
+        # print(f"Found existing attachments: {attachments}")
         return attachments
     else:
         return None
@@ -115,14 +116,14 @@ def replace_markdown_image_refs(markdown):
         basename = os.path.basename(path)
         attachment_map[basename] = path
 
-        return f"<ac:link><ri:attachment ri:filename={basename}/><ac:plain-text-link-body>{text}</ac:plain-text-link-body></ac:link>"
+        return f"[{text}](confluence-attachment:{basename})"
 
     return (re.sub(MDIMG_PATTERN, img_replace, markdown), attachment_map)
 
 def upload_attached_images(url, attachment_map, base_fs_path, page_id):
-    attachments = find_page_attachments(url, page_id)
+    attachments = find_page_attachments(url, page_id) or {}
 
-    for (basename, path) in attachment_map:
+    for (basename, path) in attachment_map.items():
         fpath = os.path.join(base_fs_path, path)
 
         with open(fpath, 'rb') as f:
@@ -131,17 +132,18 @@ def upload_attached_images(url, attachment_map, base_fs_path, page_id):
         digest = hashlib.sha256(img_data).hexdigest()
         att_info = attachments.get(basename)
         if att_info and att_info['metadata'] and digest == att_info['metadata'].get('comment'):
-            print("Skipping attachment %s - no update needed." % fpath, file=sys.stderr)
+            print(f"Skipping attachment {fpath} - no update needed.", file=sys.stderr)
         else:
+            print(f"Uploading: {fpath} as attachment to page: {page_id}", file=sys.stderr)
             url = f"{url}/rest/api/content/{page_id}/child/attachment"
-            files={
-                'file': img_data,
-                minorEdit: True,
-                'comment': digest
-            }
 
-            resp = session.put(url, files=files)
-            resp.raise_for_status()
+            with open(fpath, 'rb') as f:
+                files={
+                    'file': f,
+                }
+
+                resp = session.post(url, files=files, headers={'X-Atlassian-Token': 'nocheck'}, data={'comment': digest, 'minorEdit': True})
+                resp.raise_for_status()
 
 
 
@@ -219,15 +221,13 @@ def publish(args):
     for base, directories, filenames in os.walk(root):
         namespace = prefix + base[len(root) :].split('/')[-1]
 
-        if not args.dry_run:
-            get_or_create_page(namespace, None)
-
+        dir_page_created = False
         for filename in filenames:
             pagename, extension = filename.rsplit('.', 1)
             pagename = prefix + pagename
 
             if extension != 'md':
-                print(f"Only markdown is supported for conversion. Skipping: '{filename}'")
+                print(f"Only markdown is supported for conversion. Skipping: '{filename}'", file=sys.stderr)
                 continue
 
             full_path = f'{base}/{filename}'
@@ -246,6 +246,7 @@ def publish(args):
                 )
                 markdown = header + markdown
 
+            if markdown:
                 # find ![Text](link.png) image refs, and replace with <ac:link><ri:attachment ...>
                 # See https://confluence.atlassian.com/conf67/confluence-storage-format-945102888.html
                 # output is the modified markdown, and a mapping of file basename to relative path on disk.
@@ -254,6 +255,8 @@ def publish(args):
                 attachment_map = [] # be resilient to misconfiguration
 
             markup = pypandoc.convert_text(markdown, f'{BIN}/confluence.lua', 'gfm')
+
+            print(f"Confluence markup:\n\n\n{markup}\n\n\n")
 
             if args.dry_run:
                 print(
@@ -268,8 +271,14 @@ def publish(args):
                 print(markup, file=sys.stderr)
                 print('----', file=sys.stderr)
             else:
+                if dir_page_created is False:
+                    get_or_create_page(namespace, None)
+                    dir_page_created = True
+
                 page = get_or_create_page(pagename, namespace)
                 page = get_page_info(args.confluence_url, page['id'])
+
+                print(f"Found attachments in doc source: {attachment_map}")
 
                 # Take attachments found above, and upload as attachments to the page
                 upload_attached_images(url=args.confluence_url,
