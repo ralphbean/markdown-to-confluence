@@ -8,6 +8,7 @@ import sys
 import re
 from urllib.parse import quote
 import re
+from urllib.parse import quote
 
 import pypandoc
 import requests
