@@ -38,7 +38,7 @@ def find_page(url, space, page_title):
         return None
 
 
-def find_page_attachments(page_id):
+def find_page_attachments(url, page_id):
     url = f"{url}/rest/api/content/{page_id}/child/attachment"
     resp = session.get(url)
     resp.raise_for_status()
@@ -119,11 +119,11 @@ def replace_markdown_image_refs(markdown):
 
     return (re.sub(MDIMG_PATTERN, img_replace, markdown), attachment_map)
 
-def upload_attached_images(attachment_map, base, page_id):
+def upload_attached_images(url, attachment_map, base_fs_path, page_id):
     attachments = find_page_attachments(page_id)
 
     for (basename, path) in attachment_map:
-        fpath = os.path.join(base, path)
+        fpath = os.path.join(base_fs_path, path)
 
         with open(fpath, 'rb') as f:
             img_data = f.read()
@@ -272,7 +272,10 @@ def publish(args):
                 page = get_page_info(args.confluence_url, page['id'])
 
                 # Take attachments found above, and upload as attachments to the page
-                upload_attached_images(attachment_map, base, page['id'])
+                upload_attached_images(url=args.confluence_url,
+                                       attachment_map=attachment_map, 
+                                       base_fs_path=base, 
+                                       page_id=page['id'])
 
                 # Check for unnecessary update first
                 url = args.confluence_url + '/' + page['_links']['webui']
