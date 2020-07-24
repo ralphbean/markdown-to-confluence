@@ -262,7 +262,7 @@ def publish(args):
                 page = get_page_info(args.confluence_url, page['id'])
 
                 # Take attachments found above, and upload as attachments to the page
-                upload_image_attachments(attachment_map, base, page['id'])
+                upload_attached_images(attachment_map, base, page['id'])
 
                 # Check for unnecessary update first
                 url = args.confluence_url + '/' + page['_links']['webui']
