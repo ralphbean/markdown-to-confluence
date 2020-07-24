@@ -5,6 +5,7 @@ import hashlib
 import logging
 import os
 import sys
+from urllib.parse import quote
 
 import pypandoc
 import requests
@@ -176,10 +177,10 @@ def publish(args):
             if 'CI_PROJECT_URL' in os.environ:
                 gitlab = os.environ['CI_PROJECT_URL'].strip('/')
                 folder = base.split(args.root, 1)[1].strip('/')
+                url = f"{gitlab}/blob/master/{quote(folder)}/{quote(filename)}"
                 header = (
                     f" > Do not bother editing this page directly – it is automatically "
-                    f"generated from [source]({gitlab}/blob/master/"
-                    f"{folder}/{filename}).  Submit a merge request, instead!\n"
+                    f"generated from [source]({url}). Submit a merge request, instead!\n"
                 )
                 markdown = header + markdown
 
