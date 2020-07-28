@@ -258,7 +258,7 @@ def publish(args):
 
             markup = pypandoc.convert_text(markdown, f'{BIN}/confluence.lua', 'gfm')
 
-            print(f"Confluence markup:\n\n\n{markup}\n\n\n")
+            # print(f"Confluence markup:\n\n\n{markup}\n\n\n")
 
             if args.dry_run:
                 print(
