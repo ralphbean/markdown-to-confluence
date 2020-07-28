@@ -137,14 +137,14 @@ def upload_attached_images(url, attachment_map, base_fs_path, page_id):
             print(f"Skipping attachment {fpath} - no update needed.", file=sys.stderr)
         else:
             print(f"Uploading: {fpath} as attachment to page: {page_id}", file=sys.stderr)
-            url = f"{url}/rest/api/content/{page_id}/child/attachment"
+            attachment_url = f"{url}/rest/api/content/{page_id}/child/attachment"
 
             with open(fpath, 'rb') as f:
                 files={
                     'file': f,
                 }
 
-                resp = session.post(url, files=files, headers={'X-Atlassian-Token': 'nocheck'}, data={'comment': digest, 'minorEdit': True})
+                resp = session.post(attachment_url, files=files, headers={'X-Atlassian-Token': 'nocheck'}, data={'comment': digest, 'minorEdit': True})
                 resp.raise_for_status()
 
 
