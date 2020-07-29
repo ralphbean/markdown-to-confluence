@@ -13,7 +13,7 @@ import requests
 
 BIN = os.path.dirname(__file__)
 
-MDIMG_PATTERN = re.compile('\\!\\[(.+)\\]\\((.+)\\)')
+MDIMG_PATTERN = re.compile('\\!\\[(.*)\\]\\((.+)\\)')
 
 
 username = os.environ.get('CONFLUENCE_USERNAME')
