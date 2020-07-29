@@ -50,7 +50,7 @@ def find_page_attachments(url, page_id):
         return attachments
     else:
         return None
-    
+
 
 def get_page_info(url, page_id):
     url = f"{url}/rest/api/content/{page_id}?expand=ancestors,version"
@@ -105,6 +105,7 @@ def update_page(url, page_id, markup, comment):
     resp.raise_for_status()
     return resp.json()
 
+
 def replace_markdown_image_refs(markdown):
     attachment_map = {}
 
@@ -119,6 +120,7 @@ def replace_markdown_image_refs(markdown):
 
     return (re.sub(MDIMG_PATTERN, img_replace, markdown), attachment_map)
 
+
 def upload_attached_images(url, attachment_map, base_fs_path, page_id):
     attachments = find_page_attachments(url, page_id) or {}
 
@@ -130,20 +132,30 @@ def upload_attached_images(url, attachment_map, base_fs_path, page_id):
 
         digest = hashlib.sha256(img_data).hexdigest()
         att_info = attachments.get(basename)
-        if att_info and att_info['metadata'] and digest == att_info['metadata'].get('comment'):
+        if (
+            att_info
+            and att_info['metadata']
+            and digest == att_info['metadata'].get('comment')
+        ):
             print(f"Skipping attachment {fpath} - no update needed.", file=sys.stderr)
         else:
-            print(f"Uploading: {fpath} as attachment to page: {page_id}", file=sys.stderr)
+            print(
+                f"Uploading: {fpath} as attachment to page: {page_id}", file=sys.stderr
+            )
             attachment_url = f"{url}/rest/api/content/{page_id}/child/attachment"
 
             with open(fpath, 'rb') as f:
-                files={
+                files = {
                     'file': f,
                 }
 
-                resp = session.post(attachment_url, files=files, headers={'X-Atlassian-Token': 'nocheck'}, data={'comment': digest, 'minorEdit': True})
+                resp = session.post(
+                    attachment_url,
+                    files=files,
+                    headers={'X-Atlassian-Token': 'nocheck'},
+                    data={'comment': digest, 'minorEdit': True},
+                )
                 resp.raise_for_status()
-
 
 
 def getargs():
@@ -226,7 +238,10 @@ def publish(args):
             pagename = prefix + pagename
 
             if extension != 'md':
-                print(f"Only markdown is supported for conversion. Skipping: '{filename}'", file=sys.stderr)
+                print(
+                    f"Only markdown is supported for conversion. Skipping: '{filename}'",
+                    file=sys.stderr,
+                )
                 continue
 
             full_path = f'{base}/{filename}'
@@ -251,7 +266,7 @@ def publish(args):
                 # output is the modified markdown, and a mapping of file basename to relative path on disk.
                 (markdown, attachment_map) = replace_markdown_image_refs(markdown)
             else:
-                attachment_map = [] # be resilient to misconfiguration
+                attachment_map = []  # be resilient to misconfiguration
 
             markup = pypandoc.convert_text(markdown, f'{BIN}/confluence.lua', 'gfm')
 
@@ -280,10 +295,12 @@ def publish(args):
                 print(f"Found attachments in doc source: {attachment_map}")
 
                 # Take attachments found above, and upload as attachments to the page
-                upload_attached_images(url=args.confluence_url,
-                                       attachment_map=attachment_map, 
-                                       base_fs_path=base, 
-                                       page_id=page['id'])
+                upload_attached_images(
+                    url=args.confluence_url,
+                    attachment_map=attachment_map,
+                    base_fs_path=base,
+                    page_id=page['id'],
+                )
 
                 # Check for unnecessary update first
                 url = args.confluence_url + '/' + page['_links']['webui']
