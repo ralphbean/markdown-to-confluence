@@ -256,7 +256,7 @@ def publish(args):
                 url = f"{gitlab}/blob/master/{quote(folder)}/{quote(filename)}"
                 header = (
                     f" > Do not bother editing this page directly – it is automatically "
-                    f"generated from [source]({url}). Submit a merge request, instead!\n"
+                    f"generated from [source]({url}). Submit a merge request, instead!\n\n"
                 )
                 markdown = header + markdown
 
