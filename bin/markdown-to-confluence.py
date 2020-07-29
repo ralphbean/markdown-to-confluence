@@ -266,7 +266,7 @@ def publish(args):
                 # output is the modified markdown, and a mapping of file basename to relative path on disk.
                 (markdown, attachment_map) = replace_markdown_image_refs(markdown)
             else:
-                attachment_map = []  # be resilient to misconfiguration
+                attachment_map = {}  # be resilient to misconfiguration
 
             markup = pypandoc.convert_text(markdown, f'{BIN}/confluence.lua', 'gfm')
 
