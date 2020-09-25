@@ -7,8 +7,8 @@ LABEL maintainer="Ralph Bean" \
 RUN dnf install -y --setopt=tsflags=nodocs \
                 pandoc \
                 lua \
-                python-pypandoc \
-                python-requests \
     && dnf clean all
+
+RUN pip3 install -r requirements.txt
 
 COPY . /usr/local/.

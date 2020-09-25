@@ -1,2 +1,2 @@
-pypandoc
-requests
+pypandoc==1.5
+requests==2.21.0
