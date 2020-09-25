@@ -5,10 +5,11 @@ LABEL maintainer="Ralph Bean" \
       distribution-scope="public"
 
 RUN dnf install -y --setopt=tsflags=nodocs \
+                python3-pip \
                 pandoc \
                 lua \
     && dnf clean all
 
-RUN pip3 install -r requirements.txt
-
 COPY . /usr/local/.
+
+RUN pip3 install --no-dependencies -r /usr/local/requirements.txt
