@@ -34,6 +34,10 @@ local function escape(s, in_attribute)
     end)
 end
 
+local function cdata(s)
+  return string.format('<![CDATA[%s]]>', s:gsub("]", "\\]"))
+end
+
 -- Helper function to convert an attributes table into
 -- a string that can be put into HTML tags.
 local function attributes(attr)
@@ -265,8 +269,18 @@ function CodeBlock(s, attr)
     return '<img src="data:image/png;base64,' .. png .. '"/>'
   -- otherwise treat as code (one could pipe through a highlighter)
   else
-    return "<pre><code" .. attributes(attr) .. ">" .. escape(s) ..
-           "</code></pre>"
+    local language = attr.class
+    if language == "" then
+      language = "bash"
+    end
+
+    return string.format(
+      '<ac:structured-macro ac:name="code" ac:schema-version="1">' ..
+      '<ac:parameter ac:name="language">%s</ac:parameter>' ..
+      '<ac:plain-text-body>%s</ac:plain-text-body>' ..
+      '</ac:structured-macro>',
+      language, cdata(s)
+    )
   end
 end
 
