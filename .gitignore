@@ -1,3 +1,6 @@
 .tox
 venv
+.venv
 confluence-test
+__pycache__/
+*.py[cod]
