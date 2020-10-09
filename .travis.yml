@@ -1,5 +1,8 @@
 language: python
 
+install:
+  - pip install tox
+
 python:
  - "3.8"
 
