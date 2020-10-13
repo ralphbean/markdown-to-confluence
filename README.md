@@ -41,7 +41,7 @@ packages (over 100MiB total) to the image.
 ````
 ```dot
 digraph {
-	a -> b
+  a -> b
 }
 ```
 ````
@@ -50,7 +50,8 @@ digraph {
 
 ```
 $ podman run --rm -it quay.io/rbean/markdown-to-confluence \
+    /usr/local/bin/markdown-to-confluence.py \
     --confluence-url https://confluence.example.org \
-		--confluence-space SPACE \
-		--root /src --path doc --dry-run
+    --confluence-space SPACE \
+    --root /src --path doc --dry-run
 ```
