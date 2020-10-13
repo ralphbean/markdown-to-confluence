@@ -48,9 +48,24 @@ digraph {
 
 ## Example
 
+To mount the current working directory at `/src` and have
+[markdown-to-confluence.py](bin/markdown-to-confluence.py) process all the
+`.md` files in the `doc` subdirectory recursively:
+
 ```
-$ podman run --rm -it quay.io/rbean/markdown-to-confluence \
+$ podman run --rm -it -v .:/src:Z quay.io/rbean/markdown-to-confluence \
     /usr/local/bin/markdown-to-confluence.py \
+    --confluence-url https://confluence.example.org \
+    --confluence-space SPACE \
+    --root /src --path doc --dry-run
+```
+
+To start the container with the current working directory at `/src` and work
+interactively:
+
+```
+$ podman run --rm -it -v .:/src:Z quay.io/rbean/markdown-to-confluence
+# markdown-to-confluence.py \
     --confluence-url https://confluence.example.org \
     --confluence-space SPACE \
     --root /src --path doc --dry-run
