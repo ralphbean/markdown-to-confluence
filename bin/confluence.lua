@@ -152,7 +152,7 @@ end
 function Link(s, src, tit, attr)
   if src and string.sub(src, 1, 11) == "confluence:" then
      -- [Page Link](confluence:SPACE:Content Title)
-     for space, page in src:gsub('%%20',' '):gmatch('confluence:(%w+):([%w%s.]+)')
+     for space, page in src:gsub('%%20',' '):gmatch('confluence:(%w+):([%w%s.-]+)')
      do
         return string.format('<ac:link><ri:page ri:space-key="%s" '..
                              'ri:content-title="%s" /></ac:link>', space, page)
