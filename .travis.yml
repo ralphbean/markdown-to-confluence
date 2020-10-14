@@ -1,0 +1,14 @@
+language: python
+dist: focal
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install pandoc
+
+install:
+  - pip install tox
+
+python:
+ - "3.8"
+
+script: tox
