@@ -28,7 +28,7 @@ session.auth = (username, password)
 
 def find_page(url, space, page_title):
     querystring = f"cql=title='{page_title}' and space='{space}'"
-    search_url = f"{url}/rest/api/content/search?{querystring}"
+    search_url = f"{url}/rest/api/content/search?{querystring}&expand=ancestors"
     resp = session.get(search_url)
     resp.raise_for_status()
     if len(resp.json()['results']) > 0:
@@ -209,6 +209,7 @@ def publish(args):
         if not pagename:
             return
         page = pages_by_name.get(pagename)
+        ancestor = pages_by_name[namespace]['id'] if namespace else None
         if not page:
             print("Searching for %s" % pagename, file=sys.stderr)
             page = find_page(
@@ -216,15 +217,25 @@ def publish(args):
                 space=args.confluence_space,
                 page_title=pagename,
             )
+
+        if page:
+            actual_parents = [a['title'] for a in page['ancestors']]
+            if namespace and namespace not in actual_parents:
+                raise ValueError(
+                    f"Found existing page \"{pagename}\" with parents {actual_parents} "
+                    f"but I will not reset that to requested parent \"{namespace}\". "
+                    f"Move page manually or change directory structure."
+                )
+
         if not page:
             print("Creating %s" % pagename, file=sys.stderr)
-            ancestor = pages_by_name[namespace]['id'] if namespace else None
             page = create_page(
                 url=args.confluence_url,
                 space=args.confluence_space,
                 page_title=pagename,
                 ancestor=ancestor,
             )
+
         pages_by_name[pagename] = page
         return page
 
