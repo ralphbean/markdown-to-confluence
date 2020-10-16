@@ -170,6 +170,13 @@ def getargs():
         '--path', help='Relative path to location of the docs, inside root.'
     )
     parser.add_argument('--root', help='Absolute path to the docs repo.')
+    parser.add_argument(
+        '--allow-move',
+        '--move',
+        action='store_true',
+        help='Reparent pages; without this option, attempting to republish an '
+        'existing page under a different parent will fail',
+    )
     args = parser.parse_args()
 
     if not args.dry_run:
@@ -221,11 +228,18 @@ def publish(args):
         if page:
             actual_parents = [a['title'] for a in page['ancestors']]
             if namespace and namespace not in actual_parents:
-                raise ValueError(
-                    f"Found existing page \"{pagename}\" with parents {actual_parents} "
-                    f"but I will not reset that to requested parent \"{namespace}\". "
-                    f"Move page manually or change directory structure."
-                )
+                if args.allow_move:
+                    print(
+                        f"Changing parent of page \"{pagename}\" from "
+                        f"\"{'/'.join(actual_parents)}\" to \"{namespace}\"",
+                        file=sys.stderr,
+                    )
+                else:
+                    raise ValueError(
+                        f"Found existing page \"{pagename}\" with parents {actual_parents} "
+                        f"but I will not reset that to requested parent \"{namespace}\". "
+                        f"Move page manually or change directory structure."
+                    )
 
         if not page:
             print("Creating %s" % pagename, file=sys.stderr)
