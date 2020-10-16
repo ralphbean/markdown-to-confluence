@@ -1,0 +1,9 @@
+FROM fedora:latest
+
+RUN yum -y update \
+	&& yum -y --setopt install_weak_deps=False install pandoc tox \
+	&& yum clean all \
+	&& mkdir /src
+WORKDIR /src
+
+ENTRYPOINT tox
