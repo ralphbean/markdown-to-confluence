@@ -26,7 +26,8 @@ If the spaces are not escaped as `%20`, make sure to wrap the specifier with
 
 To link to anchors in the same document, use `#anchor-name` as the link
 destination. To see the name of the anchor for a particular title, inspect the
-dry run output. Anchor elements look like this:
+dry run output. Search for anchor elements that look like the following example
+(where `anchor-name` is the text to find and use):
 
 ```
 <ac:structured-macro ac:name="anchor"><ac:parameter ac:name="">anchor-name</ac:parameter></ac:structured-macro>
