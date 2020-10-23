@@ -49,7 +49,7 @@ digraph {
 ```
 ````
 
-## Example
+# Examples
 
 To mount the current working directory at `/src` and have
 [markdown-to-confluence.py](bin/markdown-to-confluence.py) process all the
@@ -72,4 +72,33 @@ $ podman run --rm -it -v .:/src:Z quay.io/rbean/markdown-to-confluence
     --confluence-url https://confluence.example.org \
     --confluence-space SPACE \
     --root /src --path doc --dry-run
+```
+
+## Running Tests
+
+In order to run the tests, you will need to have `pandoc` and `tox` installed.
+A container definition with a minimal setup environment is included in the
+`tests` directory. Use the repository root for the build context:
+
+```
+$ podman build -f tests/Containerfile -t markdown-to-confluence:tox .
+```
+
+Mount the repository root as a volume when running the tests. Make sure to
+include the `:Z` suffix if your system uses SELinux. The entrypoint is `tox`,
+so you can pass arguments directly:
+
+```
+$ podman run --rm -ti -v .:/src markdown-to-confluence:tox -v
+```
+
+With this configuration, the `.tox` directory in the repository root will be
+manipulated by the container. If you run tests frequently, it may be helpful to
+define an alias:
+
+```
+tox() {
+	local gitroot=$(git rev-parse --show-toplevel) || return $?
+	podman run --rm -ti -v .:/src:Z "$gitroot:tox" "$@"
+}
 ```
