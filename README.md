@@ -57,6 +57,7 @@ To mount the current working directory at `/src` and have
 
 ```
 $ podman run --rm -it -v .:/src:Z quay.io/rbean/markdown-to-confluence \
+    /usr/local/bin/markdown-to-confluence.py \
     --confluence-url https://confluence.example.org \
     --confluence-space SPACE \
     --root /src --path doc --dry-run
@@ -66,8 +67,7 @@ To start the container with the current working directory at `/src` and work
 interactively:
 
 ```
-$ podman run --rm -it -v .:/src:Z --entrypoint /bin/bash \
-    quay.io/rbean/markdown-to-confluence
+$ podman run --rm -it -v .:/src:Z quay.io/rbean/markdown-to-confluence
 # markdown-to-confluence.py \
     --confluence-url https://confluence.example.org \
     --confluence-space SPACE \
