@@ -16,5 +16,3 @@ COPY . /usr/local/.
 ENV REQUESTS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt
 
 RUN pip3 install --no-dependencies -r /usr/local/requirements.txt
-
-ENTRYPOINT ["/usr/local/bin/markdown-to-confluence.py"]
