@@ -24,7 +24,7 @@ jobs:
       id: test
       uses: fedora-python/tox-github-action@master
       with:
-        dnf_install: --repo updates pandoc
+        dnf_install: --repo fedora pandoc
         tox_env: ${{ matrix.tox_env }}
 
   build-ubuntu:

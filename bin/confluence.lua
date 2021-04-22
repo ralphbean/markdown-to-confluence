@@ -234,18 +234,13 @@ end
 function Header(lev, s, attr)
 
   local attr_table = {}
-  local prefix = ""
   for x,y in pairs(attr) do
-    if y and y ~= "" then
-      if x == "id" then
-        prefix = prefix .. AnchorRef(y)
-      else
-        attr_table[x] = y
-      end
+    if y and y ~= "" and x ~= "id" then
+      attr_table[x] = y
     end
   end
 
-  return prefix .. "<h" .. lev .. attributes(attr_table) ..  ">" .. s .. "</h" .. lev .. ">"
+  return "<h" .. lev .. attributes(attr_table) ..  ">" .. s .. "</h" .. lev .. ">"
 end
 
 function BlockQuote(s)
@@ -338,11 +333,6 @@ end
 
 
 function CaptionedImage(src, tit, caption, attr)
-   local prefix = ""
-   if attr and attr['id'] ~= "" then
-      prefix = AnchorRef(attr['id'])
-   end
-
    attr_cpy = table.shallow_copy(attr)
    attr_cpy['id'] = "captioned-image"
    return Div('<table><tbody><tr><td><ac:image><ri:attachment ri:filename="' .. escape(src,true) .. '" /></ac:image></td></tr><tr><td>' .. escape(caption) .. '</td></tr></tbody></table>', attr_cpy)
