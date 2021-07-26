@@ -13,14 +13,14 @@ import requests
 
 BIN = os.path.dirname(__file__)
 
-MDIMG_PATTERN = re.compile('\\!\\[(.*)\\]\\((.+)\\)')
+MDIMG_PATTERN = re.compile("\\!\\[(.*)\\]\\((.+)\\)")
 
 
-username = os.environ.get('CONFLUENCE_USERNAME')
-password = os.environ.get('CONFLUENCE_PASSWORD')
+username = os.environ.get("CONFLUENCE_USERNAME")
+password = os.environ.get("CONFLUENCE_PASSWORD")
 
 # all pages will get their name prefix with this string (useful for generating previews)
-prefix = os.environ.get('CONFLUENCE_PREFIX', '')
+prefix = os.environ.get("CONFLUENCE_PREFIX", "")
 
 session = requests.Session()
 session.auth = (username, password)
@@ -31,8 +31,8 @@ def find_page(url, space, page_title):
     search_url = f"{url}/rest/api/content/search?{querystring}&expand=ancestors"
     resp = session.get(search_url)
     resp.raise_for_status()
-    if len(resp.json()['results']) > 0:
-        return resp.json()['results'][0]
+    if len(resp.json()["results"]) > 0:
+        return resp.json()["results"][0]
     else:
         return None
 
@@ -41,10 +41,10 @@ def find_page_attachments(url, page_id):
     url = f"{url}/rest/api/content/{page_id}/child/attachment"
     resp = session.get(url)
     resp.raise_for_status()
-    if len(resp.json()['results']) > 0:
+    if len(resp.json()["results"]) > 0:
         attachments = {}
-        for result in resp.json()['results']:
-            attachments[result['title']] = result
+        for result in resp.json()["results"]:
+            attachments[result["title"]] = result
 
         # print(f"Found existing attachments: {attachments}")
         return attachments
@@ -70,7 +70,7 @@ def create_page(url, space, page_title, ancestor=None):
     }
 
     if ancestor:
-        data['ancestors'] = [{"id": ancestor}]
+        data["ancestors"] = [{"id": ancestor}]
 
     url = f"{url}/rest/api/content/"
     resp = session.post(url, json=data)
@@ -89,15 +89,15 @@ def update_page(url, page_id, markup, comment):
     updated_page_version = int(info["version"]["number"] + 1)
 
     data = {
-        'id': str(page_id),
-        'type': 'page',
-        'title': info['title'],
-        'version': {
-            'number': updated_page_version,
-            'minorEdit': True,
-            'message': comment,
+        "id": str(page_id),
+        "type": "page",
+        "title": info["title"],
+        "version": {
+            "number": updated_page_version,
+            "minorEdit": True,
+            "message": comment,
         },
-        'body': {'storage': {'representation': 'storage', 'value': markup}},
+        "body": {"storage": {"representation": "storage", "value": markup}},
     }
     resp = session.put(url, json=data)
     if not resp.ok:
@@ -127,15 +127,15 @@ def upload_attached_images(url, attachment_map, base_fs_path, page_id):
     for (basename, path) in attachment_map.items():
         fpath = os.path.join(base_fs_path, path)
 
-        with open(fpath, 'rb') as f:
+        with open(fpath, "rb") as f:
             img_data = f.read()
 
         digest = hashlib.sha256(img_data).hexdigest()
         att_info = attachments.get(basename)
         if (
             att_info
-            and att_info['metadata']
-            and digest == att_info['metadata'].get('comment')
+            and att_info["metadata"]
+            and digest == att_info["metadata"].get("comment")
         ):
             print(f"Skipping attachment {fpath} - no update needed.", file=sys.stderr)
         else:
@@ -144,38 +144,38 @@ def upload_attached_images(url, attachment_map, base_fs_path, page_id):
             )
             attachment_url = f"{url}/rest/api/content/{page_id}/child/attachment"
 
-            with open(fpath, 'rb') as f:
+            with open(fpath, "rb") as f:
                 files = {
-                    'file': f,
+                    "file": f,
                 }
 
                 resp = session.post(
                     attachment_url,
                     files=files,
-                    headers={'X-Atlassian-Token': 'nocheck'},
-                    data={'comment': digest, 'minorEdit': True},
+                    headers={"X-Atlassian-Token": "nocheck"},
+                    data={"comment": digest, "minorEdit": True},
                 )
                 resp.raise_for_status()
 
 
 def getargs():
-    """ Parse args from the command-line.  """
-    parser = argparse.ArgumentParser(description='Publish docs')
-    parser.add_argument('--confluence-url', help='URL to publish to confluence.')
-    parser.add_argument('--confluence-space', help='Space to publish to confluence.')
+    """Parse args from the command-line."""
+    parser = argparse.ArgumentParser(description="Publish docs")
+    parser.add_argument("--confluence-url", help="URL to publish to confluence.")
+    parser.add_argument("--confluence-space", help="Space to publish to confluence.")
     parser.add_argument(
-        '--dry-run', action='store_true', help='Don\'t actually update confluence.'
+        "--dry-run", action="store_true", help="Don't actually update confluence."
     )
     parser.add_argument(
-        '--path', help='Relative path to location of the docs, inside root.'
+        "--path", help="Relative path to location of the docs, inside root."
     )
-    parser.add_argument('--root', help='Absolute path to the docs repo.')
+    parser.add_argument("--root", help="Absolute path to the docs repo.")
     parser.add_argument(
-        '--allow-move',
-        '--move',
-        action='store_true',
-        help='Reparent pages; without this option, attempting to republish an '
-        'existing page under a different parent will fail',
+        "--allow-move",
+        "--move",
+        action="store_true",
+        help="Reparent pages; without this option, attempting to republish an "
+        "existing page under a different parent will fail",
     )
     args = parser.parse_args()
 
@@ -202,7 +202,7 @@ def getargs():
     if not args.path:
         print("--path is required.")
         sys.exit(1)
-    args.path = args.path.strip('/')
+    args.path = args.path.strip("/")
 
     return args
 
@@ -216,7 +216,7 @@ def publish(args):
         if not pagename:
             return
         page = pages_by_name.get(pagename)
-        ancestor = pages_by_name[namespace]['id'] if namespace else None
+        ancestor = pages_by_name[namespace]["id"] if namespace else None
         if not page:
             print("Searching for %s" % pagename, file=sys.stderr)
             page = find_page(
@@ -226,18 +226,18 @@ def publish(args):
             )
 
         if page:
-            actual_parents = [a['title'] for a in page['ancestors']]
+            actual_parents = [a["title"] for a in page["ancestors"]]
             if namespace and namespace not in actual_parents:
                 if args.allow_move:
                     print(
-                        f"Changing parent of page \"{pagename}\" from "
+                        f'Changing parent of page "{pagename}" from '
                         f"\"{'/'.join(actual_parents)}\" to \"{namespace}\"",
                         file=sys.stderr,
                     )
                 else:
                     raise ValueError(
-                        f"Found existing page \"{pagename}\" with parents {actual_parents} "
-                        f"but I will not reset that to requested parent \"{namespace}\". "
+                        f'Found existing page "{pagename}" with parents {actual_parents} '
+                        f'but I will not reset that to requested parent "{namespace}". '
                         f"Move page manually or change directory structure."
                     )
 
@@ -255,29 +255,29 @@ def publish(args):
 
     print(f"Looking for docs in {root}", file=sys.stderr)
     for base, directories, filenames in os.walk(root):
-        namespace = prefix + base[len(root) :].split('/')[-1]
+        namespace = prefix + base[len(root) :].split("/")[-1]
 
         dir_page_created = False
         for filename in filenames:
-            pagename, extension = filename.rsplit('.', 1)
+            pagename, extension = filename.rsplit(".", 1)
             pagename = prefix + pagename
 
-            if extension != 'md':
+            if extension != "md":
                 print(
                     f"Only markdown is supported for conversion. Skipping: '{filename}'",
                     file=sys.stderr,
                 )
                 continue
 
-            full_path = f'{base}/{filename}'
-            with open(full_path, 'r') as f:
+            full_path = f"{base}/{filename}"
+            with open(full_path, "r") as f:
                 markdown = f.read()
 
             # Add a header prefix if we can figure out where to link people to.
             # CI_PROJECT_URL is a gitlab-ci environment variable.
-            if os.environ.get('CI_PROJECT_URL'):
-                gitlab = os.environ['CI_PROJECT_URL'].strip('/')
-                folder = base.split(args.root, 1)[1].strip('/')
+            if os.environ.get("CI_PROJECT_URL"):
+                gitlab = os.environ["CI_PROJECT_URL"].strip("/")
+                folder = base.split(args.root, 1)[1].strip("/")
                 url = f"{gitlab}/blob/master/{quote(folder)}/{quote(filename)}"
                 header = (
                     f" > Do not bother editing this page directly – it is automatically "
@@ -293,7 +293,7 @@ def publish(args):
             else:
                 attachment_map = {}  # be resilient to misconfiguration
 
-            markup = pypandoc.convert_text(markdown, f'{BIN}/confluence.lua', 'gfm')
+            markup = pypandoc.convert_text(markdown, f"{BIN}/confluence.lua", "gfm")
 
             # print(f"Confluence markup:\n\n\n{markup}\n\n\n")
 
@@ -306,16 +306,16 @@ def publish(args):
                     "!! I would have updated %s/%s " % (namespace, pagename),
                     file=sys.stderr,
                 )
-                print('----', file=sys.stderr)
+                print("----", file=sys.stderr)
                 print(markup, file=sys.stderr)
-                print('----', file=sys.stderr)
+                print("----", file=sys.stderr)
             else:
                 if dir_page_created is False:
                     get_or_create_page(namespace, None)
                     dir_page_created = True
 
                 page = get_or_create_page(pagename, namespace)
-                page = get_page_info(args.confluence_url, page['id'])
+                page = get_page_info(args.confluence_url, page["id"])
 
                 print(f"Found attachments in doc source: {attachment_map}")
 
@@ -324,23 +324,23 @@ def publish(args):
                     url=args.confluence_url,
                     attachment_map=attachment_map,
                     base_fs_path=base,
-                    page_id=page['id'],
+                    page_id=page["id"],
                 )
 
                 # Check for unnecessary update first
-                url = args.confluence_url + '/' + page['_links']['webui']
-                digest = hashlib.sha256(markup.encode('utf-8')).hexdigest()
-                if digest == page['version']['message']:
+                url = args.confluence_url + "/" + page["_links"]["webui"]
+                digest = hashlib.sha256(markup.encode("utf-8")).hexdigest()
+                if digest == page["version"]["message"]:
                     print("Skipping %s - no update needed." % url, file=sys.stderr)
                     continue
 
                 # Otherwise, update our page with the output
                 print("Updating %s" % url, file=sys.stderr)
-                update_page(args.confluence_url, page['id'], markup, digest)
+                update_page(args.confluence_url, page["id"], markup, digest)
                 print("Updated %s" % url, file=sys.stderr)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     args = getargs()
 
