@@ -35,7 +35,7 @@ local function escape(s, in_attribute)
 end
 
 local function cdata(s)
-  return string.format('<![CDATA[%s]]>', s:gsub("]", "\\]"))
+  return string.format('<![CDATA[%s]]>', s:gsub("]]>", "]]>]]&gt;<![CDATA["))
 end
 
 -- Helper function to convert an attributes table into
