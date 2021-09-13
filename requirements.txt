@@ -1,6 +1,6 @@
 certifi==2021.5.30
 idna==3.2
 chardet==4.0.0
-pypandoc==1.6.3
+pypandoc==1.6.4
 requests==2.26.0
 urllib3==1.26.6
