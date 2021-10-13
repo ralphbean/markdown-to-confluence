@@ -1,5 +1,5 @@
 certifi==2021.10.8
-idna==3.2
+idna==3.3
 chardet==4.0.0
 pypandoc==1.6.4
 requests==2.26.0
