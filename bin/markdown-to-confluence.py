@@ -277,8 +277,9 @@ def publish(args):
             # CI_PROJECT_URL is a gitlab-ci environment variable.
             if os.environ.get("CI_PROJECT_URL"):
                 gitlab = os.environ["CI_PROJECT_URL"].strip("/")
+                branch = os.environ.get("CI_COMMIT_REF_NAME", "master")
                 folder = base.split(args.root, 1)[1].strip("/")
-                url = f"{gitlab}/blob/master/{quote(folder)}/{quote(filename)}"
+                url = f"{gitlab}/blob/{branch}/{quote(folder)}/{quote(filename)}"
                 header = (
                     f" > Do not bother editing this page directly – it is automatically "
                     f"generated from [source]({url}). Submit a merge request, instead!\n\n"
