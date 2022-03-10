@@ -10,6 +10,18 @@ def test_image(script):
     ) in script.run()
 
 
+def test_image_alt(script):
+    """
+    Test img with alt text.
+    """
+    script.set_content("![alt text](images/example.png \"title\")")
+    assert (
+        '<p><ac:image ac:thumbnail="true" ac:title="title" ac:alt="title">'
+        '<ri:attachment ri:filename="example.png"/>'
+        "</ac:image></p>"
+    ) in script.run()
+
+
 def test_image_html(script):
     """
     Test image.
