@@ -13,7 +13,7 @@ import requests
 
 BIN = os.path.dirname(__file__)
 
-MDIMG_PATTERN = re.compile("\\!\\[(.*)\\]\\((.+)\\)")
+MDIMG_PATTERN = re.compile(r'\!\[(.*)\]\(([^ ]+)( "(.*)")?\)')
 
 
 username = os.environ.get("CONFLUENCE_USERNAME")
@@ -110,13 +110,14 @@ def replace_markdown_image_refs(markdown):
     attachment_map = {}
 
     def img_replace(matchobj):
-        text = matchobj.group(1)
+        alt = matchobj.group(1)
         path = matchobj.group(2)
+        title = matchobj.group(4) or alt
 
         basename = os.path.basename(path)
         attachment_map[basename] = path
 
-        return f"[{text}](confluence-attachment:{basename})"
+        return f"[{title}](confluence-attachment:{basename})"
 
     return (re.sub(MDIMG_PATTERN, img_replace, markdown), attachment_map)
 
