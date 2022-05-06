@@ -17,7 +17,7 @@ def test_code_block(script):
     )
     assert (
         '<ac:structured-macro ac:name="code" ac:schema-version="1">'
-        '<ac:parameter ac:name="language">python</ac:parameter>'
+        '<ac:parameter ac:name="language">py</ac:parameter>'
         "<ac:plain-text-body><![CDATA["
         "m = {}\n"
         'm["x"] = 1\n'
@@ -64,7 +64,7 @@ def test_code_block_avoid_escape(script):
     )
     assert (
         '<ac:structured-macro ac:name="code" ac:schema-version="1">'
-        '<ac:parameter ac:name="language">yaml</ac:parameter>'
+        '<ac:parameter ac:name="language">yml</ac:parameter>'
         "<ac:plain-text-body><![CDATA["
         "'test': '<[{}]>'\n"
         "]]></ac:plain-text-body>"
@@ -89,5 +89,46 @@ def test_code_block_escape(script):
         '<ac:structured-macro ac:name="code" ac:schema-version="1">'
         '<ac:parameter ac:name="language">xml</ac:parameter>'
         "<ac:plain-text-body><![CDATA[<![CDATA[TEST]]>]]&gt;<![CDATA[\n]]></ac:plain-text-body>"
+        "</ac:structured-macro>"
+    ) in script.run()
+
+
+def test_code_block_for_unsuported_syntax(script):
+    """
+    Test code block for an unsupported syntax.
+    """
+    script.set_content(
+        dedent(
+            """
+                ```Dockerfile
+                FROM postgres:latest
+                ```
+            """
+        )
+    )
+    assert (
+        '<ac:structured-macro ac:name="code" ac:schema-version="1">'
+        "<ac:plain-text-body><![CDATA[FROM postgres:latest\n]]></ac:plain-text-body>"
+        "</ac:structured-macro>"
+    ) in script.run()
+
+
+def test_code_block_language_name_mapping(script):
+    """
+    Test code block language name mapping ("YAML" to "yml").
+    """
+    script.set_content(
+        dedent(
+            """
+                ```YAML
+                - test
+                ```
+            """
+        )
+    )
+    assert (
+        '<ac:structured-macro ac:name="code" ac:schema-version="1">'
+        '<ac:parameter ac:name="language">yml</ac:parameter>'
+        "<ac:plain-text-body><![CDATA[- test\n]]></ac:plain-text-body>"
         "</ac:structured-macro>"
     ) in script.run()
