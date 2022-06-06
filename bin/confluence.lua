@@ -14,6 +14,44 @@
 -- produce informative error messages if your code contains
 -- syntax errors.
 
+-- Translation table for code formatting to languages supported by Confluence
+-- (supported language codes were copied from HTML when editing code macro in
+-- web UI on Confluence)
+languages = {
+  ["actionscript3"] = "actionscript3",
+  ["applescript"] = "applescript",
+  ["bash"] = "bash",
+  ["c#"] = "c#",
+  ["c++"] = "cpp",
+  ["coldfusion"] = "coldfusion",
+  ["cpp"] = "cpp",
+  ["csharp"] = "c#",
+  ["css"] = "css",
+  ["delphi"] = "delphi",
+  ["diff"] = "diff",
+  ["erl"] = "erl",
+  ["groovy"] = "groovy",
+  ["java"] = "java",
+  ["javascript"] = "js",
+  ["jfx"] = "jfx",
+  ["js"] = "js",
+  ["perl"] = "perl",
+  ["php"] = "php",
+  ["powershell"] = "powershell",
+  ["py"] = "py",
+  ["python"] = "py",
+  ["ruby"] = "ruby",
+  ["sass"] = "sass",
+  ["scala"] = "scala",
+  ["sh"] = "bash",
+  ["sql"] = "sql",
+  ["text"] = "text",
+  ["vb"] = "vb",
+  ["xml"] = "xml",
+  ["yaml"] = "yml",
+  ["yml"] = "yml",
+}
+
 -- Character escaping
 local function escape(s, in_attribute)
   return s:gsub("[<>&\"']",
@@ -264,17 +302,28 @@ function CodeBlock(s, attr)
     return '<img src="data:image/png;base64,' .. png .. '"/>'
   -- otherwise treat as code (one could pipe through a highlighter)
   else
-    local language = attr.class
+    local language = string.lower(attr.class)
+    local confluence_language = ""
     if language == "" then
-      language = "bash"
+      confluence_language = "bash"
+    elseif languages[language] ~= nil then
+      confluence_language = languages[language]
+    end
+
+    local language_param = ""
+    if confluence_language ~= "" then
+      language_param = string.format(
+        '<ac:parameter ac:name="language">%s</ac:parameter>',
+        confluence_language
+      )
     end
 
     return string.format(
       '<ac:structured-macro ac:name="code" ac:schema-version="1">' ..
-      '<ac:parameter ac:name="language">%s</ac:parameter>' ..
+      language_param ..
       '<ac:plain-text-body>%s</ac:plain-text-body>' ..
       '</ac:structured-macro>',
-      language, cdata(s)
+      cdata(s)
     )
   end
 end
