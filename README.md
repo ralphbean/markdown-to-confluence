@@ -12,15 +12,8 @@ wiki markup and publish them.
 
 ## Authentication
 
-This utility supports authenticating to confluence with personal access token or
-username and password.
-
-When the environment variable `CONFLUENCE_TOKEN` is defined, it will authenticate
-to confluence with personal access token.
-
-When `CONFLUENCE_TOKEN` is not defined, it will look for the `CONFLUENCE_USERNAME`
-and `CONFLUENCE_PASSWORD` environment variables, they should be defined to
-authenticate to confluence with username and password.
+The `CONFLUENCE_USERNAME` and `CONFLUENCE_PASSWORD` environment variables must
+be set to the username and password of an account with appropriate permissions.
 
 
 ## Confluence and Markdown

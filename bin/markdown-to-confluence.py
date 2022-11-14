@@ -15,10 +15,7 @@ BIN = os.path.dirname(__file__)
 
 MDIMG_PATTERN = re.compile(r'\!\[(.*)\]\(([^ ]+)( "(.*)")?\)')
 
-# token should be set when use Personal Access Token (PAT)
-token = os.environ.get("CONFLUENCE_TOKEN")
 
-# username and password should be set when use username+password authentication
 username = os.environ.get("CONFLUENCE_USERNAME")
 password = os.environ.get("CONFLUENCE_PASSWORD")
 
@@ -26,15 +23,7 @@ password = os.environ.get("CONFLUENCE_PASSWORD")
 prefix = os.environ.get("CONFLUENCE_PREFIX", "")
 
 session = requests.Session()
-
-
-class BearerAuth(requests.auth.AuthBase):
-    def __init__(self, token):
-        self.token = token
-
-    def __call__(self, r):
-        r.headers["authorization"] = "Bearer " + self.token
-        return r
+session.auth = (username, password)
 
 
 def find_page(url, space, page_title):
@@ -198,6 +187,12 @@ def getargs():
         if not args.confluence_space:
             print("--confluence-space is required.")
             sys.exit(1)
+        if not username:
+            print("CONFLUENCE_USERNAME must be defined to publish.")
+            sys.exit(1)
+        if not password:
+            print("CONFLUENCE_PASSWORD must be defined to publish.")
+            sys.exit(1)
 
     if not args.root:
         args.root = os.getcwd()
@@ -350,26 +345,5 @@ def publish(args):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     args = getargs()
-
-    if token:
-        print(
-            "CONFLUENCE_TOKEN is defined, will authenticate to confluence with personal access token."
-        )
-        session.auth = BearerAuth(token)
-    elif username and password:
-        print(
-            "CONFLUENCE_USERNAME and CONFLUENCE_PASSWORD are defined, "
-            "will authenticate to confluence with username and password."
-        )
-        session.auth = (username, password)
-    else:
-        print(
-            "To authenticate to confluence with personal access token, CONFLUENCE_TOKEN must be defined."
-        )
-        print(
-            "To authenticate to confluence with username and password, "
-            "CONFLUENCE_USERNAME and CONFLUENCE_PASSWORD must be defined."
-        )
-        sys.exit(1)
 
     publish(args)
