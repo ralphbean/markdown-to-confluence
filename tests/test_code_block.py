@@ -11,6 +11,7 @@ def test_code_block(script):
                 ```python
                 m = {}
                 m["x"] = 1
+
                 ```
             """
         )
@@ -35,6 +36,7 @@ def test_code_block_default_language(script):
             """
                 ```
                 cd $HOME
+
                 ```
             """
         )
@@ -58,6 +60,7 @@ def test_code_block_avoid_escape(script):
             """
                 ```yaml
                 'test': '<[{}]>'
+
                 ```
             """
         )
@@ -81,6 +84,7 @@ def test_code_block_escape(script):
             """
                 ```xml
                 <![CDATA[TEST]]>
+
                 ```
             """
         )
@@ -102,6 +106,7 @@ def test_code_block_for_unsuported_syntax(script):
             """
                 ```Dockerfile
                 FROM postgres:latest
+
                 ```
             """
         )
@@ -122,6 +127,7 @@ def test_code_block_language_name_mapping(script):
             """
                 ```YAML
                 - test
+
                 ```
             """
         )
