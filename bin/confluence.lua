@@ -52,6 +52,23 @@ languages = {
   ["yml"] = "yml",
 }
 
+-- see if the file exists
+local function file_exists(filename)
+  local f = io.open(filename, "rb")
+  if f then f:close() end
+  return f ~= nil
+end
+
+-- Read an entire file.
+-- Use "a" in Lua 5.3; "*a" in Lua 5.1 and 5.2
+local function readall(filename)
+  if not file_exists(filename) then return "" end
+  local fh = assert(io.open(filename, "rb"))
+  local contents = assert(fh:read(_VERSION <= "Lua 5.2" and "*a" or "a"))
+  fh:close()
+  return contents
+end
+
 -- Character escaping
 local function escape(s, in_attribute)
   return s:gsub("[<>&\"']",
@@ -120,17 +137,22 @@ function Doc(body, metadata, variables)
   local function add(s)
     table.insert(buffer, s)
   end
-  local css_style = [[
+  local file = readall("style.css", "r")
+  local css_style = [==[
 <ac:structured-macro ac:macro-id="b7c0ac99-8feb-49c2-858c-870cd55df16b" ac:name="html" ac:schema-version="1">'
-    <ac:parameter ac:name="atlassian-macro-output-type">INLINE</ac:parameter>
-    <ac:plain-text-body>
-    <![CDATA[
- <style>
+<ac:parameter ac:name="atlassian-macro-output-type">INLINE</ac:parameter>
+<ac:plain-text-body>
+<![CDATA[
+<style>
 #captioned-image {
-    text-align: center;
-}]] ..
-    "</style>]]></ac:plain-text-body></ac:structured-macro>"
-  add(css_style)
+  text-align: center;
+}
+%s
+</style>
+]]>
+</ac:plain-text-body></ac:structured-macro>
+]==]
+  add(string.format(css_style, file))
   add(body)
   if #notes > 0 then
     add('<ol class="footnotes">')
