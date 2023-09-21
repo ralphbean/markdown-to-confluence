@@ -1,4 +1,4 @@
-FROM fedora:latest
+FROM registry.fedoraproject.org/fedora:latest@sha256:1972716109b1c906120061063bd4cb50a46c2138d95002ccb90126928d98e013
 
 LABEL maintainer="Ralph Bean" \
       summary="Image used to publish markdown to confluence." \
