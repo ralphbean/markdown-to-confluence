@@ -1,5 +1,5 @@
 certifi==2023.11.17
-idna==3.6
+idna==3.7
 chardet==5.2.0
 pypandoc==1.12
 requests==2.31.0
