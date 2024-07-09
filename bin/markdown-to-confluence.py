@@ -10,6 +10,8 @@ import re
 
 import pypandoc
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 BIN = os.path.dirname(__file__)
 
@@ -25,7 +27,14 @@ password = os.environ.get("CONFLUENCE_PASSWORD")
 # all pages will get their name prefix with this string (useful for generating previews)
 prefix = os.environ.get("CONFLUENCE_PREFIX", "")
 
+retry_strategy = Retry(
+    total=3,
+    status_forcelist=[405, 406, 500, 502, 503, 504],
+    backoff_factor=3,  # wait 3, 6, 12 sec
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
 session = requests.Session()
+session.mount("https://", adapter)
 
 
 class BearerAuth(requests.auth.AuthBase):
